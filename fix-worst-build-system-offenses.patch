@@ -1,0 +1,95 @@
+diff -up yugabyte-db-2.17.2.0/build-support/common-build-env.sh.omv~ yugabyte-db-2.17.2.0/build-support/common-build-env.sh
+--- yugabyte-db-2.17.2.0/build-support/common-build-env.sh.omv~	2023-04-26 21:59:49.546408742 +0200
++++ yugabyte-db-2.17.2.0/build-support/common-build-env.sh	2023-04-26 22:02:07.782684662 +0200
+@@ -73,7 +73,8 @@ initialize_yugabyte_bash_common() {
+ 
+   pushd "$YB_BASH_COMMON_DIR" >/dev/null
+   local current_sha1
+-  get_current_sha1
++  #get_current_sha1
++  current_sha1="$target_sha1"
+   if [[ $current_sha1 != "$target_sha1" ]]; then
+     if ! ( set -x; git checkout "$target_sha1" ); then
+       (
+@@ -177,9 +177,11 @@ readonly -a VALID_COMPILER_TYPES=(
+   gcc
+   gcc11
+   gcc12
++  gcc13
+   clang
+   clang14
+   clang15
++  clang16
+ )
+ make_regex_from_list VALID_COMPILER_TYPES "${VALID_COMPILER_TYPES[@]}"
+ 
+diff -up yugabyte-db-2.17.2.0/cmake_modules/YugabyteFunctions.cmake.omv~ yugabyte-db-2.17.2.0/cmake_modules/YugabyteFunctions.cmake
+--- yugabyte-db-2.17.2.0/cmake_modules/YugabyteFunctions.cmake.omv~	2023-04-26 21:56:24.495511386 +0200
++++ yugabyte-db-2.17.2.0/cmake_modules/YugabyteFunctions.cmake	2023-04-26 21:56:46.378714198 +0200
+@@ -723,7 +723,7 @@ function(parse_build_root_basename)
+   EXEC_PROGRAM("${BUILD_SUPPORT_DIR}/show_build_root_name_regex.sh"
+                OUTPUT_VARIABLE BUILD_ROOT_BASENAME_RE)
+   string(REGEX MATCH "${BUILD_ROOT_BASENAME_RE}" RE_MATCH_RESULT "${YB_BUILD_ROOT_BASENAME}")
+-  if("$ENV{YB_DEBUG_BUILD_ROOT_BASENAME_PARSING}" STREQUAL "1")
++  #  if("$ENV{YB_DEBUG_BUILD_ROOT_BASENAME_PARSING}" STREQUAL "1")
+     message("Parsing build root basename: ${YB_BUILD_ROOT_BASENAME}")
+     message("Regular expression: ${BUILD_ROOT_BASENAME_RE}")
+     message("Capture groups (note that some components are repeated with and without a leading "
+@@ -731,7 +731,7 @@ function(parse_build_root_basename)
+     foreach(MATCH_INDEX RANGE 1 9)
+       message("    CMAKE_MATCH_${MATCH_INDEX}=${CMAKE_MATCH_${MATCH_INDEX}}")
+     endforeach()
+-  endif()
++    #  endif()
+ 
+   set(YB_BUILD_TYPE "${CMAKE_MATCH_1}" PARENT_SCOPE)
+ 
+diff -up yugabyte-db-2.17.2.0/build/yugabyte-bash-common/src/os.sh.omv~ yugabyte-db-2.17.2.0/build/yugabyte-bash-common/src/os.sh
+--- yugabyte-db-2.17.2.0/build/yugabyte-bash-common/src/os.sh.omv~	2023-05-09 03:18:15.087285315 +0200
++++ yugabyte-db-2.17.2.0/build/yugabyte-bash-common/src/os.sh	2023-05-09 03:19:11.677866719 +0200
+@@ -53,6 +53,7 @@ detect_os() {
+   is_centos=false
+   is_alma=false
+   is_rhel=false
++  is_openmandriva=false
+   short_os_name="unknown_os"
+ 
+   case $OSTYPE in
+@@ -91,6 +92,9 @@ detect_os() {
+         'rhel')
+           is_rhel=true
+           ;;
++        'openmandriva')
++          is_openmandriva=true
++          ;;
+         *)
+           warn "${short_os_name} is not a supported Linux distribution"
+           ;;
+@@ -125,6 +129,10 @@ is_redhat_family() {
+   [[ $is_rhel == "true" || $is_centos == "true" ||  $is_alma == "true" ]]
+ }
+ 
++is_openmandriva() {
++  [[ $is_openmandriva == "true" ]]
++}
++
+ is_ubuntu() {
+   [[ $is_ubuntu == "true" ]]
+ }
+diff -up yugabyte-db-2.17.2.0/cmake_modules/YugabyteFindThirdParty.cmake.omv~ yugabyte-db-2.17.2.0/cmake_modules/YugabyteFindThirdParty.cmake
+--- yugabyte-db-2.17.2.0/cmake_modules/YugabyteFindThirdParty.cmake.omv~	2023-05-09 03:45:03.989314744 +0200
++++ yugabyte-db-2.17.2.0/cmake_modules/YugabyteFindThirdParty.cmake	2023-05-09 03:45:26.801519164 +0200
+@@ -86,13 +86,6 @@ macro(yb_find_third_party_dependencies)
+   message("OPENSSL_LIBRARIES=${OPENSSL_LIBRARIES}")
+   message("OPENSSL_VERSION=${OPENSSL_VERSION}")
+ 
+-  if (NOT "${OPENSSL_CRYPTO_LIBRARY}" MATCHES "^${YB_THIRDPARTY_DIR}/.*")
+-    message(FATAL_ERROR "OPENSSL_CRYPTO_LIBRARY not in ${YB_THIRDPARTY_DIR}.")
+-  endif()
+-  if (NOT "${OPENSSL_SSL_LIBRARY}" MATCHES "^${YB_THIRDPARTY_DIR}/.*")
+-    message(FATAL_ERROR "OPENSSL_SSL_LIBRARY not in ${YB_THIRDPARTY_DIR}.")
+-  endif()
+-
+   ## GLog
+   find_package(GLog REQUIRED)
+   include_directories(SYSTEM ${GLOG_INCLUDE_DIR})

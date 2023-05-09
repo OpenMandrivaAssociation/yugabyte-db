@@ -1,0 +1,4 @@
+sources:
+  v2.17.2.0.tar.gz: 5bbc369a9b747ea2ac697724e6784e0f385c5f44
+  yugabyte-bash-common.tar.gz: 9fef6ceb7a5d46548e18d08c6f6beb67d1fd5ed9
+  yugabyte-db-thirdparty.tar.gz: 38f7f02a190551169522480324183181354e5f61
