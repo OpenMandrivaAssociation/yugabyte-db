@@ -10,6 +10,9 @@ URL: https://github.com/yugabyte/yugabyte-db
 License: Apache-2.0
 Group: Servers
 BuildRequires: cmake ninja
+BuildRequires: pkgconfig(libssl)
+BuildRequires: pkgconfig(libglog)
+BuildRequires: %mklibname cds-s -d -s
 
 %description
 High-performance, cloud-native, distributed SQL database that aims to support
@@ -44,6 +47,11 @@ export CMAKE_BUILD_DIR=release-clang16-full-lto-x86_64-ninja
 %cmake \
 	-DCMAKE_C_COMPILER=$(pwd)/../compiler-wrappers/cc \
 	-DCMAKE_CXX_COMPILER=$(pwd)/../compiler-wrappers/c++ \
+	-DGLOG_SHARED_LIB=%{_libdir}/libglog.so \
+	-DGLOG_INCLUDE_DIR=%{_includedir}/glog \
+	-DCDS_SHARED_LIB=%{_libdir}/libcds.so \
+	-DCDS_STATIC_LIB=%{_libdir}/libcds-s.a \
+	-DCDS_INCLUDE_DIR=%{_includedir}/cds \
 	-DREBUILD_THIRDPARTY:BOOL=OFF \
 	-G Ninja
 
